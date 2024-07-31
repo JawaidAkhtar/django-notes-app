@@ -1,45 +1,52 @@
-pipeline {
+pipeline{
     
-    agent { 
+    agent {
         node{
             label "dev"
-            
         }
     }
     
     stages{
-        stage("Clone Code"){
+        stage("clone code"){
             steps{
-                git url: "https://github.com/LondheShubham153/django-notes-app.git", branch: "main"
-                echo "Aaj toh LinkedIn Post bannta hai boss"
+                git url: "https://github.com/JawaidAkhtar/django-notes-app.git", branch: "main"
+                echo "code successfully clone"
+            }
+            
+        }
+        stage("build & test"){
+            steps{
+                sh "docker build -t mynotes-app-jenkins:latest ."
+                echo "successfully build from docker image mynotes-app-jenkins:latest"
             }
         }
-        stage("Build & Test"){
-            steps{
-                sh "docker build . -t notes-app-jenkins:latest"
-            }
-        }
-        stage("Push to DockerHub"){
+        stage("push to dockerhub"){
             steps{
                 withCredentials(
                     [usernamePassword(
-                        credentialsId:"dockerCreds",
-                        passwordVariable:"dockerHubPass", 
+                        credentialsId: "dockercreds",
+                        passwordVariable: "dockerHubPass",
                         usernameVariable:"dockerHubUser"
                         )
                     ]
                 ){
-                sh "docker image tag notes-app-jenkins:latest ${env.dockerHubUser}/notes-app-jenkins:latest"
+                sh "docker image tag mynotes-app-jenkins:latest ${env.dockerHubUser}/mynotes-app-jenkins:latest"
                 sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                sh "docker push ${env.dockerHubUser}/notes-app-jenkins:latest"
+                sh "docker push ${env.dockerHubUser}/mynotes-app-jenkins:latest"
+                
                 }
+                echo "successfully pushed to dockerhub"
             }
+            
         }
         
-        stage("Deploy"){
+        stage("deploy"){
             steps{
                 sh "docker compose up -d"
+                echo "mynotes-app successfully deployed"
+                
             }
+        
         }
     }
 }
